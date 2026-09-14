@@ -1,0 +1,47 @@
+{
+	"schemaVersion": 1,
+	"id": "decked-out-utilities",
+	"version": "${version}",
+	"name": "Decked out Utilities",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Rodrigo__Borgia"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/decked-out-utilities/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"rodrigo.utilities.DeckedOutUtilities"
+		],
+		"client": [
+			"rodrigo.utilities.client.DeckedOutUtilitiesClient"
+		],
+		"fabric-datagen": [
+			"rodrigo.utilities.client.DeckedOutUtilitiesDataGenerator"
+		]
+	},
+	"mixins": [
+		"decked-out-utilities.mixins.json",
+		{
+			"config": "decked-out-utilities.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"custom": {
+		"fabric-networking-api-v1": {
+			"version": 1,
+			"required": false
+		}
+	}
+}
