@@ -36,7 +36,7 @@ public class Map {
             {102, 101, 101, 101, 101, -126, -128, -128, -128, 101, -126, -128, -128, -128, 101, -126, -128, -128, -128, 101, -126, -126, -126, -126, 102},
             {102, 100, 100, 100, 100, -126, 101, 101, 101, 100, -126, 101, 101, 101, 100, -126, 101, 101, 101, 100, -126, -128, -128, -128, 101}};
     private static final byte[] cardIcon = {32, 33, 33, 32, 33, 33};
-    private static final byte[] recycleIcon  = {32, 33, 32, 33};
+    private static final byte[] recycleIcon  = {-123, -124, -124, -123};
 
     private static final byte[] offsets     = {6,3,5}; //main, cards, cards vertical
     private static final byte[] emberPos    = {30,34};
@@ -63,6 +63,17 @@ public class Map {
         this.mainColour = mapData.colors[16383];
     }
 
+    public int getValue(CommandContext<CommandSourceStack> context) {
+        return switch (StringArgumentType.getString(context, "type")) {
+            case "embers" -> embers;
+            case "treasure" -> treasure;
+            case "hazard" -> hazard;
+            case "clank" -> clank;
+            case "recycles" -> recycles;
+            case "cards" -> cards;
+            default -> 0;
+        };
+    }
 
     public int drawPixel(CommandContext<CommandSourceStack> context) {
         mapData.setColor(
@@ -71,6 +82,16 @@ public class Map {
          (byte) IntegerArgumentType.getInteger(context, "colour")
         );
         return 1;
+    }
+
+    public int drawRectangle(CommandContext<CommandSourceStack> context) {
+        fill(
+            IntegerArgumentType.getInteger(context, "x"),
+            IntegerArgumentType.getInteger(context, "y"),
+            IntegerArgumentType.getInteger(context, "to_x"),
+            IntegerArgumentType.getInteger(context, "to_y"),
+            (byte) IntegerArgumentType.getInteger(context, "colour")
+        ); return 1;
     }
 
     public void printIcon(int x, int y,int width, int height, byte[] colours) {
@@ -219,16 +240,23 @@ public class Map {
         }
     }
 
-    public int set(CommandContext<CommandSourceStack> context, int value) {
+    public int set(CommandContext<CommandSourceStack> context) {
+        int value = IntegerArgumentType.getInteger(context, "value");
         switch (StringArgumentType.getString(context, "type")) {
-            case "embers" -> {embers = (byte) value; update(emberPos, emberIcons, embers);}
-            case "treasure" -> {treasure = (byte) value; update(treasurePos, treasureIcons, treasure);}
-            case "hazard" -> {hazard = (byte) value; update(hazardPos, hazardIcons, hazard);}
-            case "clank" -> {clank = (byte) value; update(clankPos, clankIcons, clank);}
-            case "recycles" -> {recycles = (byte) value; updateRecycle();}
-            default -> {cards = (byte) value; updateCards();}
+            case "embers" -> { if (value <= 60) {
+                embers = (byte) value; update(emberPos, emberIcons, embers); return 1;} return 0;}
+            case "treasure" -> { if (value <= 60) {
+                treasure = (byte) value; update(treasurePos, treasureIcons, treasure); return 1;} return 0;}
+            case "hazard" -> { if (value <= 60) {
+                hazard = (byte) value; update(hazardPos, hazardIcons, hazard); return 1;} return 0;}
+            case "clank" -> { if (value <= 60) {
+                clank = (byte) value; update(clankPos, clankIcons, clank); return 1;} return 0;}
+            case "recycles" -> { if (value <= 3) {
+                recycles = (byte) value; updateRecycle(); return 1;} return 0;}
+            case "cards" -> { if (value <= 40) {
+                cards = (byte) value; updateCards(); return 1;} return 0;}
+            default -> {return 0;}
         }
-        return 1;
     }
 
     public int clear() {

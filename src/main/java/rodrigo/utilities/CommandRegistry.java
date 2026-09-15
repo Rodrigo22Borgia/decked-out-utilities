@@ -57,14 +57,21 @@ public class CommandRegistry {
                                         .then(Commands.literal("clear")
                                                 .executes(context -> getMap(context).clear()))
                                         .then(Commands.literal("colour")
-                                                .then(Commands.argument("colourID", IntegerArgumentType.integer(-128, 127))
+                                                .then(Commands.argument("colourID", IntegerArgumentType.integer(0, 255))
                                                         .executes(context -> getMap(context).colourMap(context))))
                                         .then(Commands.literal("pixel")
                                                 .then(Commands.argument("x", IntegerArgumentType.integer(0, 127))
                                                         .then(Commands.argument("y", IntegerArgumentType.integer(0, 127))
                                                                 .then(Commands.argument("colour", IntegerArgumentType.integer(0, 255))
                                                                         .executes(context -> getMap(context).drawPixel(context))))))
-                                        .then(Commands.argument("type", StringArgumentType.string()).suggests((context, builder) -> builder
+                                        .then(Commands.literal("rectangle")
+                                                .then(Commands.argument("x", IntegerArgumentType.integer(0, 127))
+                                                            .then(Commands.argument("y", IntegerArgumentType.integer(0, 127))
+                                                                .then(Commands.argument("to_x", IntegerArgumentType.integer(0, 127))
+                                                                        .then(Commands.argument("to_y", IntegerArgumentType.integer(0, 127))
+                                                                                .then(Commands.argument("colour", IntegerArgumentType.integer(0, 255))
+                                                                        .executes(context -> getMap(context).drawRectangle(context))))))))
+                                        .then(Commands.argument("type", StringArgumentType.word()).suggests((context, builder) -> builder
                                                         .suggest("embers")
                                                         .suggest("treasure")
                                                         .suggest("hazard")
@@ -74,9 +81,10 @@ public class CommandRegistry {
                                                         .buildFuture())
                                                 .then(Commands.literal("increment").executes(context -> getMap(context).increment(context)))
                                                 .then(Commands.literal("decrement").executes(context -> getMap(context).decrement(context)))
+                                                .then(Commands.literal("get").executes(context -> getMap(context).getValue(context)))
                                                 .then(Commands.literal("set")
-                                                        .then(Commands.argument("value", IntegerArgumentType.integer(0, 60))
-                                                                .executes(context -> getMap(context).set(context, IntegerArgumentType.getInteger(context, "value")))))
+                                                        .then(Commands.argument("value", IntegerArgumentType.integer(0))
+                                                                .executes(context -> getMap(context).set(context))))
                                         ))));
     }
 
