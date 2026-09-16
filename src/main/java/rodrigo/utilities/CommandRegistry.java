@@ -124,8 +124,9 @@ public class CommandRegistry {
     private static int _Vex(CommandContext<CommandSourceStack> context, LivingEntity target) throws CommandSyntaxException {
         int vexes = 0;
         for (Entity vex : EntityArgument.getEntities(context, "vexes")) {
-            if (vex instanceof Vex) {
-                ((Vex) vex).setTarget(target);
+            if (vex instanceof Vex _vex) {
+                _vex.setBoundOrigin(null);
+                _vex.setTarget(target);
                 vexes++;
             }
         }
