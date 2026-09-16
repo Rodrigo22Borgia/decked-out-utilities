@@ -287,6 +287,13 @@ public class Map {
             pos[0] += 3;
         }
 
+        embers = 0;
+        treasure = 0;
+        hazard = 0;
+        clank = 0;
+        recycles = 0;
+        cards = 0;
+
         return 1;
     }
 
