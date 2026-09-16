@@ -8,7 +8,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
-import org.apache.commons.lang3.function.TriConsumer;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -55,12 +54,11 @@ public class Map {
 
     public final int mapId;
     public final MapItemSavedData mapData;
-    public byte mainColour;
+    public byte fillColour = 84;
 
     public Map(int mapId, ServerLevel level) {
         this.mapId = mapId;
         this.mapData = level.getMapData(new MapId(mapId));
-        this.mainColour = mapData.colors[16383];
     }
 
     public int getValue(CommandContext<CommandSourceStack> context) {
@@ -88,8 +86,8 @@ public class Map {
         fill(
             IntegerArgumentType.getInteger(context, "x"),
             IntegerArgumentType.getInteger(context, "y"),
-            IntegerArgumentType.getInteger(context, "to_x"),
-            IntegerArgumentType.getInteger(context, "to_y"),
+            IntegerArgumentType.getInteger(context, "width"),
+            IntegerArgumentType.getInteger(context, "height"),
             (byte) IntegerArgumentType.getInteger(context, "colour")
         ); return 1;
     }
@@ -216,12 +214,12 @@ public class Map {
             case "recycles" -> {
                 if (recycles > 0) {
                     recycles --;
-                    interpolate(recyclePos[0] + recycles * 3, recyclePos[1], 2, 2, mainColour);
+                    interpolate(recyclePos[0] + recycles * 3, recyclePos[1], 2, 2, fillColour);
                 } return recycles;}
             case "cards" -> {
                 if (cards > 0) {
                     cards --;
-                    interpolate(cardPos[0] + (cards / 2) * 3, cardPos[1] + (cards % 2) * 5, 2, 3, mainColour);
+                    interpolate(cardPos[0] + (cards / 2) * 3, cardPos[1] + (cards % 2) * 5, 2, 3, fillColour);
                 } return cards;}
         }
         return 0;
@@ -234,7 +232,7 @@ public class Map {
         }
 
         if (level < 0) {
-            interpolate(x + (value % 15) * 6, y, 5, 5, mainColour);
+            interpolate(x + (value % 15) * 6, y, 5, 5, fillColour);
         } else {
             interpolate(x + (value % 15) * 6, y, 5, 5, icon[level]);
         }
@@ -260,11 +258,10 @@ public class Map {
     }
 
     public int clear() {
-        mainColour = 20;
         byte[] pos = emberPos.clone();
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 15; j++) {
-                fill(pos[0], pos[1], 5, 5, mainColour);
+                fill(pos[0], pos[1], 5, 5, fillColour);
                 pos[0] += 6;
             }
             pos[0] = emberPos[0];
@@ -274,7 +271,7 @@ public class Map {
         pos = cardPos.clone();
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < 20; j++) {
-                fill(pos[0], pos[1], 2, 3, mainColour);
+                fill(pos[0], pos[1], 2, 3, fillColour);
                 pos[0] += 3;
             }
             pos[0] = cardPos[0];
@@ -283,7 +280,7 @@ public class Map {
 
         pos = recyclePos.clone();
         for (int j = 0; j < 3; j++) {
-            fill(pos[0], pos[1], 2, 2, mainColour);
+            fill(pos[0], pos[1], 2, 2, fillColour);
             pos[0] += 3;
         }
 
@@ -312,7 +309,7 @@ public class Map {
 
         if (level == 0) {
             while (i < 15) {
-                fill(pos[0], pos[1], 5, 5, mainColour);
+                fill(pos[0], pos[1], 5, 5, fillColour);
                 pos[0] += 6;
                 i++;
             }
@@ -336,7 +333,7 @@ public class Map {
             i++;
         }
         while (i < 3) {
-            fill(pos[0], pos[1], 2, 2, mainColour);
+            fill(pos[0], pos[1], 2, 2, fillColour);
             pos[0] += 3;
             i++;
         }
@@ -351,19 +348,44 @@ public class Map {
             i++;
         }
         while (i < 40) {
-            fill(pos[0] + (i/2) * 3, pos[1] + (i%2) * 5, 2, 3, mainColour);
+            fill(pos[0] + (i/2) * 3, pos[1] + (i%2) * 5, 2, 3, fillColour);
             i++;
         }
     }
 
     public int colourMap(CommandContext<CommandSourceStack> context) {
-        byte newColour = (byte) IntegerArgumentType.getInteger(context,"colourID");
+        byte colour_new = (byte) IntegerArgumentType.getInteger(context,"new_colour");
+        byte colour     = (byte) IntegerArgumentType.getInteger(context,"colourID");
 
         for (int i = 0; i < mapData.colors.length; i++) {
-            if (mapData.colors[i] == mainColour) {mapData.setColor(i % 128, i / 128, newColour);}
+            if (mapData.colors[i] == colour) {mapData.setColor(i % 128, i / 128, colour_new);}
         }
 
-        mainColour = newColour;
         return 1;
+    }
+    public int colourRectangle(CommandContext<CommandSourceStack> context) {
+        byte colour_new = (byte) IntegerArgumentType.getInteger(context,"new_colour");
+        byte colour     = (byte) IntegerArgumentType.getInteger(context,"colour");
+        int x = IntegerArgumentType.getInteger(context, "x");
+        int y = IntegerArgumentType.getInteger(context, "y");
+        int width = IntegerArgumentType.getInteger(context, "width");
+        int height = IntegerArgumentType.getInteger(context, "height");
+
+        for (int i = x; i < x + width; i++) {
+            for (int j = y; j < y + height; j++) {
+                if (mapData.colors[i + j * 128] == colour) {mapData.setColor(i, j, colour_new);}
+            }
+        }
+
+        return 1;
+    }
+
+    public int getColour(CommandContext<CommandSourceStack> context) {
+        int x = IntegerArgumentType.getInteger(context, "x");
+        int y = IntegerArgumentType.getInteger(context, "y");
+        int colour = mapData.colors[x + y * 128];
+
+        context.getSource().sendSuccess(() -> Component.literal("" + colour), false);
+        return colour;
     }
 }
