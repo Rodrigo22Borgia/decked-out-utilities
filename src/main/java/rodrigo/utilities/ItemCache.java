@@ -29,24 +29,12 @@ public class ItemCache {
     public static void store(ItemEntity item) {
         final ServerLevel level = (ServerLevel) item.level();
         CACHE.putIfAbsent(level, new LinkedList<>());
-        CACHE.get(level).add(Triple.of(item.getItem(), item.position(), level.getGameTime()));
+        CACHE.get(level).add(Triple.of(item.getItem(), item.position(), item.getAge() == -32768 ? null : level.getGameTime() - item.getAge()));
 
 
         item.discard();
     }
 
-    public static void restore(ServerLevel level) {
-        final LinkedList<Triple<ItemStack, Vec3, Long>> items = CACHE.remove(level);
-        if (items == null) return;
-        Vec3 pos;
-        ItemEntity entity;
-        for (Triple<ItemStack, Vec3, Long> item : items) {
-            pos = item.getMiddle();
-            entity = new ItemEntity(level, pos.x,pos.y,pos.z, item.getLeft());
-            ((ItemAgeAccessor) entity).$setAge((int)((level.getGameTime()-item.getRight()) % 1_000_000_000));
-            level.addFreshEntity(entity);
-        }
-    }
 
     public static void clear(Level level) {
         CACHE.remove(level);
@@ -54,6 +42,14 @@ public class ItemCache {
 
     public static void clear() {
         CACHE.clear();
+    }
+
+    public static void restore(ServerLevel level) {
+        final LinkedList<Triple<ItemStack, Vec3, Long>> items = CACHE.remove(level);
+        if (items == null) return;
+        for (Triple<ItemStack, Vec3, Long> item : items) {
+            spawnItem(level, item);
+        }
     }
     
     public static void pop() {
@@ -64,16 +60,26 @@ public class ItemCache {
                 item = iterator.next();
                 for (Player player : level.players()) {
                     if (player.position().distanceTo(item.getMiddle()) < (CACHING_DISTANCE - 1)) {
-                        Vec3 pos = item.getMiddle();
-                        ItemEntity entity = new ItemEntity(level, pos.x, pos.y, pos.z, item.getLeft());
-                        ((ItemAgeAccessor) entity).$setAge((int) ((level.getGameTime() - item.getRight()) % 1_000_000_000));
-                        level.addFreshEntity(entity);
+                        spawnItem(level, item);
                         iterator.remove();
                         break;
                     }
                 }
             }
         });
+    }
+
+    private static void spawnItem(ServerLevel level, Triple<ItemStack, Vec3, Long> item) {
+        Vec3 pos = item.getMiddle();
+        ItemEntity entity = new ItemEntity(level, pos.x, pos.y, pos.z, item.getLeft());
+        if (item.getRight() == null) {
+            ((ItemAgeAccessor) entity).$setAge(-32768);
+        } else {
+            int age = (int) ((level.getGameTime() - item.getRight()) % 1_000_000_000);
+            if (age > 5900) return;
+            ((ItemAgeAccessor) entity).$setAge(age);
+        }
+        level.addFreshEntity(entity);
     }
 
     public static int start(CommandContext<CommandSourceStack> context)

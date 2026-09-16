@@ -4,12 +4,16 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.Permission;
 import net.minecraft.server.permissions.Permissions;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Vex;
 
 import java.util.Optional;
 
@@ -86,6 +90,15 @@ public class CommandRegistry {
                                                         .then(Commands.argument("value", IntegerArgumentType.integer(0))
                                                                 .executes(context -> getMap(context).set(context))))
                                         ))));
+//VEX
+        dispatcher.register(
+                Commands.literal("decked-out")
+                        .then(Commands.literal("vex")
+                                .then(Commands.argument("vexes", EntityArgument.entities())
+                                        .then(Commands.argument("target", EntityArgument.player())
+                                                .executes(CommandRegistry::Vex))
+                                        .then(Commands.literal("clear")
+                                                .executes(CommandRegistry::VexClear)))));
     }
 
     private static Map getMap(CommandContext<CommandSourceStack> context) {
@@ -98,5 +111,24 @@ public class CommandRegistry {
             return map;
         }
         return mapOptional.get();
+    }
+
+    private static int Vex(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        return _Vex(context, EntityArgument.getPlayer(context, "target"));
+    };
+
+    private static int VexClear(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        return _Vex(context, null);
+    }
+
+    private static int _Vex(CommandContext<CommandSourceStack> context, LivingEntity target) throws CommandSyntaxException {
+        int vexes = 0;
+        for (Entity vex : EntityArgument.getEntities(context, "vexes")) {
+            if (vex instanceof Vex) {
+                ((Vex) vex).setTarget(target);
+                vexes++;
+            }
+        }
+        return vexes;
     }
 }
