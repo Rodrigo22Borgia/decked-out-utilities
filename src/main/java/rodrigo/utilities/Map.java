@@ -36,6 +36,7 @@ public class Map {
             {102, 101, 101, 101, 101, -126, -128, -128, -128, 101, -126, -128, -128, -128, 101, -126, -128, -128, -128, 101, -126, -126, -126, -126, 102},
             {102, 100, 100, 100, 100, -126, 101, 101, 101, 100, -126, 101, 101, 101, 100, -126, 101, 101, 101, 100, -126, -128, -128, -128, 101}};
     private static final byte[] cardIcon = {32, 33, 33, 32, 33, 33};
+    private static final byte[] x2Icon = {85, 85, 85, 85, 126, 84, 126, 84, 85, 85, 85, 85, 85, 126, 84, 85, 85, 85, 85, 85, 126, 84, 126, 84, 85, 85, 85, 85, 85, 85, 85, 85, 85, 126, 84, 85, 85, 126, 126, 84, 126, 84, 85, 85, 126, 84, 126, 84, 126, 84, 85, 126, 84, 85, 126, 84, 85, 126, 126, 84, 85, 85, 126, 84};
     private static final byte[] emberPos    = {30,34};
     private static final byte[] treasurePos = {30,57};
     private static final byte[] hazardPos   = {30,80};
@@ -43,16 +44,18 @@ public class Map {
     private static final byte[] recyclePos  = {20,116};
     private static final byte[] cardPos     = {62,115};
     private static final byte[] reprintPos  = {19,115};
+    private static final byte[] x2Pos       = {111, 25};
 
     private byte embers    = 0;
     private byte treasure  = 0;
     private byte hazardB   = 0;
-    private byte hazard   = 0;
+    private byte hazard    = 0;
     private byte clankB    = 0;
-    private byte clank    = 0;
+    private byte clank     = 0;
     private byte recycles  = 0;
     private byte cards     = 0;
     private boolean reprint= false;
+    private boolean x2     = false;
 
     public final int mapId;
     public final MapItemSavedData mapData;
@@ -186,6 +189,7 @@ public class Map {
             case "embers" -> {
                 if (embers < 60) {
                     interpolate(emberPos[0], emberPos[1], embers++, emberIcons, false);
+                    if (x2 && embers < 60) interpolate(emberPos[0], emberPos[1], embers++, emberIcons, false);
                 } return embers;}
             case "treasure" -> {
                 if (treasure < 60) {
@@ -303,6 +307,7 @@ public class Map {
         cards = 0;
 
         reprint(false);
+        x2(false);
         updateRecycle();
 
         return 1;
@@ -372,6 +377,31 @@ public class Map {
     public int reprintGet(CommandContext<CommandSourceStack> context) {
         final int value;
         if (reprint) value = 1;
+        else value = 0;
+        context.getSource().sendSuccess(() -> Component.literal("" + value), false);
+        return value;
+    }
+
+
+    public int x2(CommandContext<CommandSourceStack> context) {
+        return x2(BoolArgumentType.getBool(context, "set"));
+    }
+
+    public int x2(boolean _x2) {
+        x2 = _x2;
+        if (x2) {
+            printIcon(x2Pos[0], x2Pos[1], 8, 8, x2Icon);
+            return 1;
+        }
+        else {
+            fill(x2Pos[0], x2Pos[1], 8, 8, (byte) 85);
+            return 0;
+        }
+    }
+
+    public int x2Get(CommandContext<CommandSourceStack> context) {
+        final int value;
+        if (x2) value = 1;
         else value = 0;
         context.getSource().sendSuccess(() -> Component.literal("" + value), false);
         return value;

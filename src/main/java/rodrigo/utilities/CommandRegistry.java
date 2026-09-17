@@ -88,6 +88,11 @@ public class CommandRegistry {
                                                     .executes(context -> getMap(context).reprint(context)))
                                                 .then(Commands.literal("get")
                                                         .executes(context -> getMap(context).reprintGet(context))))
+                                        .then(Commands.literal("x2")
+                                                .then(Commands.argument("set", BoolArgumentType.bool())
+                                                    .executes(context -> getMap(context).x2(context)))
+                                                .then(Commands.literal("get")
+                                                        .executes(context -> getMap(context).x2Get(context))))
                                         .then(Commands.argument("type", StringArgumentType.word()).suggests((context, builder) -> builder
                                                         .suggest("embers")
                                                         .suggest("treasure")
