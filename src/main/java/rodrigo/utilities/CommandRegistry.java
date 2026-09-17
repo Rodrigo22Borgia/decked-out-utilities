@@ -1,6 +1,7 @@
 package rodrigo.utilities;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -82,6 +83,11 @@ public class CommandRegistry {
                                                                                         .executes(context -> getMap(context).drawRectangle(context))
                                                                                         .then(Commands.argument("new_colour", IntegerArgumentType.integer(0, 255))
                                                                                                 .executes(context -> getMap(context).replaceIn(context)))))))))
+                                        .then(Commands.literal("reprint")
+                                                .then(Commands.argument("set", BoolArgumentType.bool())
+                                                    .executes(context -> getMap(context).reprint(context)))
+                                                .then(Commands.literal("get")
+                                                        .executes(context -> getMap(context).reprintGet(context))))
                                         .then(Commands.argument("type", StringArgumentType.word()).suggests((context, builder) -> builder
                                                         .suggest("embers")
                                                         .suggest("treasure")

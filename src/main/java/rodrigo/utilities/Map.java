@@ -1,5 +1,6 @@
 package rodrigo.utilities;
 
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -41,6 +42,7 @@ public class Map {
     private static final byte[] clankPos    = {30,103};
     private static final byte[] recyclePos  = {20,116};
     private static final byte[] cardPos     = {62,115};
+    private static final byte[] reprintPos  = {19,115};
 
     private byte embers    = 0;
     private byte treasure  = 0;
@@ -50,6 +52,7 @@ public class Map {
     private byte clank    = 0;
     private byte recycles  = 0;
     private byte cards     = 0;
+    private boolean reprint= false;
 
     public final int mapId;
     public final MapItemSavedData mapData;
@@ -299,6 +302,7 @@ public class Map {
         recycles = 0;
         cards = 0;
 
+        reprint(false);
         updateRecycle();
 
         return 1;
@@ -347,7 +351,31 @@ public class Map {
             pos[0] += 5;
             i++;
         }
-    };
+    }
+
+    public int reprint(CommandContext<CommandSourceStack> context) {
+        return reprint(BoolArgumentType.getBool(context, "set"));
+    }
+
+    public int reprint(boolean _reprint) {
+        reprint = _reprint;
+        if (reprint) {
+            replaceIn(reprintPos[0], reprintPos[1], 15, 8, (byte) 33, (byte) 99);
+            return 1;
+        }
+        else {
+            replaceIn(reprintPos[0], reprintPos[1], 15, 8, (byte) 99, (byte) 33);
+            return 0;
+        }
+    }
+
+    public int reprintGet(CommandContext<CommandSourceStack> context) {
+        final int value;
+        if (reprint) value = 1;
+        else value = 0;
+        context.getSource().sendSuccess(() -> Component.literal("" + value), false);
+        return value;
+    }
 
     private void updateCards() {
         final byte[] pos = cardPos.clone();
