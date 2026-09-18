@@ -6,10 +6,12 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 
+import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -35,8 +37,9 @@ public class Map {
             {-126, -128, -128, -128, -128, -126, -126, -126, -126, -128, -126, -126, -126, -126, -128, -126, -126, -126, -126, -128, -126, -127, -127, -127, -128},
             {102, 101, 101, 101, 101, -126, -128, -128, -128, 101, -126, -128, -128, -128, 101, -126, -128, -128, -128, 101, -126, -126, -126, -126, 102},
             {102, 100, 100, 100, 100, -126, 101, 101, 101, 100, -126, 101, 101, 101, 100, -126, 101, 101, 101, 100, -126, -128, -128, -128, 101}};
-    private static final byte[] cardIcon = {32, 33, 33, 32, 33, 33};
-    private static final byte[] x2Icon = {85, 85, 85, 85, 126, 84, 126, 84, 85, 85, 85, 85, 85, 126, 84, 85, 85, 85, 85, 85, 126, 84, 126, 84, 85, 85, 85, 85, 85, 85, 85, 85, 85, 126, 84, 85, 85, 126, 126, 84, 126, 84, 85, 85, 126, 84, 126, 84, 126, 84, 85, 126, 84, 85, 126, 84, 85, 126, 126, 84, 85, 85, 126, 84};
+    private static final byte[] cardIcon    = {32, 33, 33, 32, 33, 33};
+    private static final byte[] _2pattern   = {24, 9, 25, 41, 26, 12, 44, 52, 5, 37, 53, 6, 30, 54, 15, 23, 55};
+    private static final byte[] x2pattern   = {32, 48, 41, 34, 50, 12, 44, 52, 5, 37, 53, 6, 30, 54, 15, 23, 55};
     private static final byte[] emberPos    = {30,34};
     private static final byte[] treasurePos = {30,57};
     private static final byte[] hazardPos   = {30,80};
@@ -45,17 +48,19 @@ public class Map {
     private static final byte[] cardPos     = {62,115};
     private static final byte[] reprintPos  = {19,115};
     private static final byte[] x2Pos       = {111, 25};
+    private static final byte[] textColours = {126, 122, 18, 22};
 
     private byte embers    = 0;
     private byte treasure  = 0;
     private byte hazardB   = 0;
-    private byte hazard    = 0;
     private byte clankB    = 0;
+    private byte hazard    = 0;
     private byte clank     = 0;
     private byte recycles  = 0;
     private byte cards     = 0;
     private boolean reprint= false;
-    private boolean x2     = false;
+    private boolean flip   = false;
+    private final int[] x2 = {0,0,0,0,0,0};
 
     public final int mapId;
     public final MapItemSavedData mapData;
@@ -91,6 +96,12 @@ public class Map {
             for (int j = y; j < y + height; j++) {
                 mapData.setColor(i,j, colours[ix++]);
             }
+        }
+    }
+
+    public void printPattern(int x, int y, int width, int height, byte[] positions, byte colour) {
+        for (byte position : positions) {
+            mapData.setColor(x + (position % width), y + (position / height), colour);
         }
     }
 
@@ -172,11 +183,11 @@ public class Map {
             case "embers" -> embers;
             case "treasure" -> treasure;
             case "hazard_block" -> hazardB;
+            case "hazard" -> hazard;
             case "clank_block" -> clankB;
+            case "clank" -> clank;
             case "recycles" -> recycles;
             case "cards" -> cards;
-            case "clank" -> clank;
-            case "hazard" -> hazard;
 
             default -> 0;
         };
@@ -184,25 +195,32 @@ public class Map {
         return value;
     }
 
+    private boolean flip() {
+      flip = !flip;
+      return flip;
+    };
+
     public int increment(CommandContext<CommandSourceStack> context) {
         switch (StringArgumentType.getString(context, "type")) {
             case "embers" -> {
-                if (embers < 60) {
+                if (embers < 60 && !(x2[0] < 0 && flip())) {
                     interpolate(emberPos[0], emberPos[1], embers++, emberIcons, false);
-                    if (x2 && embers < 60) interpolate(emberPos[0], emberPos[1], embers++, emberIcons, false);
+                    if (x2[0] > 0 && embers < 60) interpolate(emberPos[0], emberPos[1], embers++, emberIcons, false);
                 } return embers;}
             case "treasure" -> {
-                if (treasure < 60) {
+                if (treasure < 60 && !(x2[1] < 0 && flip())) {
                     interpolate(treasurePos[0], treasurePos[1], treasure++, treasureIcons, false);
                 } return treasure;}
             case "hazard_block" -> {
-                if (hazardB < 60) {
+                if (hazardB < 60 && !(x2[2] < 0 && flip())) {
                     interpolate(hazardPos[0], hazardPos[1], hazardB++, hazardIcons, false);
                 } return hazardB;}
             case "clank_block" -> {
-                if (clankB < 60) {
+                if (clankB < 60 && !(x2[3] < 0 && flip())) {
                     interpolate(clankPos[0], clankPos[1], clankB++, clankIcons, false);
                 } return clankB;}
+            case "hazard" -> {if (hazardB > 0) {decrement("hazard_block");} else {hazard++;} return hazard;}
+            case "clank" -> {if (clankB > 0) {decrement("clank_block");} else {clank++;} return clank;}
             case "recycles" -> {
                 if (recycles < 3) {
                     recycles++;
@@ -213,8 +231,6 @@ public class Map {
                     interpolate(cardPos[0] + (cards / 2) * 3, cardPos[1] + (cards % 2) * 5, 2, 3, cardIcon);
                     cards ++;
                 } return cards;}
-            case "clank" -> {if (clankB > 0) {decrement("clank_block");} else {clank++;} return clank;}
-            case "hazard" -> {if (hazardB > 0) {decrement("hazard_block");} else {hazard++;} return hazard;}
         }
         return 0;
     }
@@ -299,6 +315,12 @@ public class Map {
             pos[1] += 5;
         }
 
+        for (int i = 0; i < 4; i++) {
+            fill(x2Pos[0], x2Pos[1] + 23 * i, 8, 8, (byte) 85);
+        }
+
+        flip = false;
+
         embers = 0;
         treasure = 0;
         hazardB = 0;
@@ -307,7 +329,6 @@ public class Map {
         cards = 0;
 
         reprint(false);
-        x2(false);
         updateRecycle();
 
         return 1;
@@ -382,29 +403,46 @@ public class Map {
         return value;
     }
 
-
     public int x2(CommandContext<CommandSourceStack> context) {
-        return x2(BoolArgumentType.getBool(context, "set"));
-    }
-
-    public int x2(boolean _x2) {
-        x2 = _x2;
-        if (x2) {
-            printIcon(x2Pos[0], x2Pos[1], 8, 8, x2Icon);
-            return 1;
-        }
-        else {
-            fill(x2Pos[0], x2Pos[1], 8, 8, (byte) 85);
-            return 0;
-        }
-    }
-
-    public int x2Get(CommandContext<CommandSourceStack> context) {
-        final int value;
-        if (x2) value = 1;
-        else value = 0;
+        final int value = x2(StringArgumentType.getString(context, "type"), StringArgumentType.getString(context, "multiple"));
         context.getSource().sendSuccess(() -> Component.literal("" + value), false);
         return value;
+    }
+
+    public int x2(String type, String key) {
+
+        final int idx = switch (type) {
+            case "embers" -> 0;
+            case "treasure" -> 1;
+            case "hazard_block" -> 2;
+            case "clank_block" -> 3;
+            default -> -1;
+        };
+
+        if (idx == -1) return 0;
+
+        if (key.equals("get")) {
+            return x2[idx];
+        }
+
+        final int value;
+
+        fill(x2Pos[0], x2Pos[1] + 23 * idx, 8, 8, (byte) 85);
+        switch (key) {
+            case "x2" -> {
+                value = 1;
+                printPattern(x2Pos[0], x2Pos[1] + 23 * idx, 8, 8, x2pattern, textColours[idx]);
+            }
+            case "_2" -> {
+                value = -1;
+                printPattern(x2Pos[0], x2Pos[1] + 23 * idx, 8, 8, _2pattern, textColours[idx]);
+            }
+            case "none" -> value = 0;
+            default -> {return 0;}
+        }
+
+        x2[idx] = value;
+        return 1;
     }
 
     private void updateCards() {
