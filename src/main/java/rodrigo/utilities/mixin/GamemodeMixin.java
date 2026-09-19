@@ -1,7 +1,9 @@
 package rodrigo.utilities.mixin;
 
+import net.minecraft.commands.CommandResultCallback;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.PermissionSet;
 import net.minecraft.world.level.GameType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,7 +20,7 @@ public class GamemodeMixin {
 			ServerPlayer player = (ServerPlayer) (Object) this;
 			MinecraftServer server = player.level().getServer();
 
-			server.getFunctions().execute(server.getFunctions().get(DeckedOutUtilities.ANTICHEAT).get(), player.createCommandSourceStack());
+			server.getFunctions().execute(server.getFunctions().get(DeckedOutUtilities.ANTICHEAT).get(), player.createCommandSourceStack().withMaximumPermission(PermissionSet.ALL_PERMISSIONS).withCallback(CommandResultCallback.EMPTY));
 		}
 	}
 }
