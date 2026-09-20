@@ -255,7 +255,7 @@ public class Map {
                     updateRecycle();
                 } return recycles;}
             case "cards" -> {
-                if (cards > 0 && --cards <= 40) interpolate(cardPos[0] + (cards / 2) * 3, cardPos[1] + (cards % 2) * 5, 2, 3, fillColour); return cards;}
+                if (cards > 0 && --cards < 40) interpolate(cardPos[0] + (cards / 2) * 3, cardPos[1] + (cards % 2) * 5, 2, 3, fillColour); return cards;}
             case "clank" -> {clank--; return clank;}
             case "hazard" -> {hazard--; return hazard;}
         }
