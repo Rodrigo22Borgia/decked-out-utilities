@@ -20,7 +20,7 @@ public class GamemodeMixin {
 			ServerPlayer player = (ServerPlayer) (Object) this;
 			MinecraftServer server = player.level().getServer();
 
-			server.getFunctions().execute(server.getFunctions().get(DeckedOutUtilities.ANTICHEAT).get(), player.createCommandSourceStack().withMaximumPermission(PermissionSet.ALL_PERMISSIONS).withCallback(CommandResultCallback.EMPTY));
+			server.getFunctions().execute(server.getFunctions().get(DeckedOutUtilities.ANTICHEAT).get(), player.createCommandSourceStack().withMaximumPermission(PermissionSet.ALL_PERMISSIONS).withSuppressedOutput());
 		}
 	}
 }

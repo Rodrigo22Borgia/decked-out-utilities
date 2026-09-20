@@ -4,8 +4,7 @@
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
 		"ItemEntityMixin",
-		"ItemAgeAccessor",
-		"GamemodeMixin"
+		"ItemAgeAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 1
