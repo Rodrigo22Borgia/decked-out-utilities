@@ -59,7 +59,6 @@ public class Map {
     private int recycles  = 0;
     private int cards     = 0;
     private boolean reprint= false;
-    private boolean flip   = false;
     private final int[] x2 = {0,0,0,0,0,0};
 
     public final int mapId;
@@ -195,37 +194,20 @@ public class Map {
         return value;
     }
 
-    private boolean flip() {
-      flip = !flip;
-      return flip;
-    };
-
     public int increment(CommandContext<CommandSourceStack> context) {
         switch (StringArgumentType.getString(context, "type")) {
             case "embers" -> {
-                if (!(x2[0] < 0 && flip())) {
-                    if (embers < 60) interpolate(emberPos[0], emberPos[1], embers, emberIcons, false);
-                    if (x2[0] > 0 && embers++ < 59) interpolate(emberPos[0], emberPos[1], embers, emberIcons, false);
-                    embers++;
-                } return embers;}
+                if (embers < 60) interpolate(emberPos[0], emberPos[1], embers, emberIcons, false);
+                return ++embers;}
             case "treasure" -> {
-                if (!(x2[1] < 0 && flip())) {
-                    if (treasure < 60) interpolate(treasurePos[0], treasurePos[1], treasure, treasureIcons, false);
-                    if (x2[1] > 0 && treasure++ < 59) interpolate(treasurePos[0], treasurePos[1], treasure, treasureIcons, false);
-                    treasure++;
-                } return treasure;}
+                if (treasure < 60) interpolate(treasurePos[0], treasurePos[1], treasure, treasureIcons, false);
+                return ++treasure;}
             case "hazard_block" -> {
-                if (!(x2[2] < 0 && flip())) {
-                    if (hazardB < 60) interpolate(hazardPos[0], hazardPos[1], hazardB, hazardIcons, false);
-                    if (x2[2] > 0 && hazardB++ < 59) interpolate(hazardPos[0], hazardPos[1], hazardB, hazardIcons, false);
-                    hazardB++;
-                } return hazardB;}
+                if (hazardB < 60) interpolate(hazardPos[0], hazardPos[1], hazardB, hazardIcons, false);
+                return ++hazardB;}
             case "clank_block" -> {
-                if (!(x2[3] < 0 && flip())) {
-                    if (clankB < 60) interpolate(clankPos[0], clankPos[1], clankB, clankIcons, false);
-                    if (x2[3] > 0 && clankB++ < 59) interpolate(clankPos[0], clankPos[1], clankB, clankIcons, false);
-                    clankB++;
-                } return clankB;}
+                if (clankB < 60) interpolate(clankPos[0], clankPos[1], clankB, clankIcons, false);
+                return ++clankB;}
             case "hazard" -> {if (hazardB > 0) {decrement("hazard_block");} else {hazard++;} return hazard;}
             case "clank" -> {if (clankB > 0) {decrement("clank_block");} else {clank++;} return clank;}
             case "recycles" -> {recycles++; updateRecycle(); return recycles;}
@@ -307,8 +289,6 @@ public class Map {
         for (int i = 0; i < 4; i++) {
             fill(x2Pos[0], x2Pos[1] + 23 * i, 8, 8, (byte) 85);
         }
-
-        flip = false;
 
         embers = 0;
         treasure = 0;
